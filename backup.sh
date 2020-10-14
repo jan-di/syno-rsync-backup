@@ -11,7 +11,7 @@ LOCAL_PATH=/volume1/share_name/folder
 # CONFIG END
 
 NOW=$(date +"%Y-%m-%d_%H-%M-%S")
-LOG_DIR=$(dirname "$0")/logs/
+LOG_DIR=$(dirname "$0")/logs
 LOG=$LOG_DIR/backup_$NOW.log
 
 {
@@ -47,6 +47,6 @@ LOG=$LOG_DIR/backup_$NOW.log
     rm -rf ${TEMP_PATH}
 
     echo [$(date +"%T")] Finished Backup
-} | tee $LOG
+} 2>&1 | tee $LOG
 
 exit $ERROR_CODE
