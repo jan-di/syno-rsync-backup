@@ -46,7 +46,7 @@ LOG=$LOG_DIR/backup_$NOW.log
     cp -R --preserve=timestamps ${TEMP_PATH} "${LOCAL_PATH}"
     rm -rf ${TEMP_PATH}
 
-    echo [$(date +"%T")] Finished Backup
-} 2>&1 | tee $LOG
+    echo [$(date +"%T")] Finished Backup. Error: $ERROR_CODE
+} 1> >(tee $LOG ) 2> >(tee $LOG >&2 )
 
 exit $ERROR_CODE
