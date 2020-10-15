@@ -13,6 +13,7 @@ LOCAL_PATH=/volume1/share_name/folder
 NOW=$(date +"%Y-%m-%d_%H-%M-%S")
 LOG_DIR=$(dirname "$0")/logs
 LOG=$LOG_DIR/backup_$NOW.log
+ERROR_CODE=0
 
 {
     mkdir -p $LOG_DIR
@@ -32,21 +33,26 @@ LOG=$LOG_DIR/backup_$NOW.log
     [ ! -d "$LOCAL_PATH" ] && mkdir -p "$LOCAL_PATH"
     mv $LOCAL_PATH $TEMP_PATH
 
-    ERROR_CODE=0
     for path in "${REMOTE_PATHS[@]}"
     do
         echo [$(date +"%T")] Syncing remote path $path..
         /bin/rsync -zrltR --delete --stats --human-readable \
             -e "ssh -i $SSH_KEY -p $SSH_PORT -o UserKnownHostsFile=$SSH_KNOWN_HOSTS" \
             $SSH_USER@$SSH_HOST:$path "$TEMP_PATH"
-        ERROR_CODE=$(($ERROR_CODE + $?))
+			
+		LASTERROR=$?
+		if (( $LASTERROR > 0 )); then
+			ERROR_CODE=$LASTERROR
+		fi
     done
 
     echo [$(date +"%T")] Copy synced backup back to "$LOCAL_PATH"..
     cp -R --preserve=timestamps ${TEMP_PATH} "${LOCAL_PATH}"
     rm -rf ${TEMP_PATH}
 
-    echo [$(date +"%T")] Finished Backup. Error: $ERROR_CODE
-} 1> >(tee $LOG ) 2> >(tee $LOG >&2 )
+    echo [$(date +"%T")] Finished Backup. Last Error Code: $ERROR_CODE
+} >> $LOG 2>&1
+
+cat $LOG > /dev/stdout
 
 exit $ERROR_CODE
